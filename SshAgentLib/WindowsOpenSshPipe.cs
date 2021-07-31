@@ -28,8 +28,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Threading;
 
 
@@ -40,7 +38,7 @@ namespace dlech.SshAgentLib
     const string agentPipeId = "openssh-ssh-agent";
     const int receiveBufferSize = 5 * 1024;
 
-    static uint threadId = 0;
+    static uint threadId;
 
     NamedPipeServerStream listeningServer;
 
@@ -52,7 +50,7 @@ namespace dlech.SshAgentLib
 
     public WindowsOpenSshPipe()
     {
-      if (File.Exists(string.Format("//./pipe/{0}", agentPipeId))) {
+      if (File.Exists($"//./pipe/{agentPipeId}")) {
         throw new PageantRunningException();
       }
       var thread = new Thread(listenerThread) {Name = "WindowsOpenSshPipe.Listener", IsBackground = true};
@@ -60,7 +58,7 @@ namespace dlech.SshAgentLib
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out long ClientProcessId);
+    static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out uint ClientProcessId);
 
     void listenerThread()
     {
@@ -74,7 +72,7 @@ namespace dlech.SshAgentLib
           server.WaitForConnection();
           listeningServer = null;
           var thread = new Thread(connectionThread) {
-            Name = string.Format("WindowsOpenSshPipe.Connection{0}", threadId++), IsBackground = true
+            Name = $"WindowsOpenSshPipe.Connection{threadId++}", IsBackground = true
           };
           thread.Start(server);
         }
@@ -89,8 +87,7 @@ namespace dlech.SshAgentLib
       try {
         var server = obj as NamedPipeServerStream;
 
-        long clientPid;
-        if (!GetNamedPipeClientProcessId(server.SafePipeHandle.DangerousGetHandle(), out clientPid)) {
+        if (!GetNamedPipeClientProcessId(server.SafePipeHandle.DangerousGetHandle(), out var clientPid)) {
           throw new IOException("Failed to get client PID", Marshal.GetHRForLastWin32Error());
         }
         var proc = Process.GetProcessById((int)clientPid);
