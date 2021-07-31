@@ -35,12 +35,12 @@ namespace dlech.SshAgentLib
 {
   public class WindowsOpenSshPipe : IDisposable
   {
-    const string agentPipeId = "openssh-ssh-agent";
-    const int receiveBufferSize = 5 * 1024;
+    private const string agentPipeId = "openssh-ssh-agent";
+    private const int receiveBufferSize = 5 * 1024;
 
-    static uint threadId;
+    private static uint threadId;
 
-    NamedPipeServerStream listeningServer;
+    private NamedPipeServerStream listeningServer;
 
 
     public delegate void ConnectionHandlerFunc(Stream stream, Process process);
@@ -58,9 +58,9 @@ namespace dlech.SshAgentLib
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out uint ClientProcessId);
+    private static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out uint ClientProcessId);
 
-    void listenerThread()
+    private void listenerThread()
     {
       try {
         while (true) {
@@ -82,7 +82,7 @@ namespace dlech.SshAgentLib
       }
     }
 
-    void connectionThread(object obj)
+    private void connectionThread(object obj)
     {
       try {
         var server = obj as NamedPipeServerStream;
@@ -107,7 +107,7 @@ namespace dlech.SshAgentLib
       GC.SuppressFinalize(this);
     }
 
-    void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
       if (disposing) {
         if (listeningServer != null) {
