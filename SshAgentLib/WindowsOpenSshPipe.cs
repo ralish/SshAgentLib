@@ -32,6 +32,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 
+
 namespace dlech.SshAgentLib
 {
   public class WindowsOpenSshPipe : IDisposable
@@ -42,23 +43,22 @@ namespace dlech.SshAgentLib
     static uint threadId = 0;
 
     NamedPipeServerStream listeningServer;
-    
+
 
     public delegate void ConnectionHandlerFunc(Stream stream, Process process);
+
+
     public ConnectionHandlerFunc ConnectionHandler { get; set; }
-    
+
     public WindowsOpenSshPipe()
     {
       if (File.Exists(string.Format("//./pipe/{0}", agentPipeId))) {
         throw new PageantRunningException();
       }
-      var thread = new Thread(listenerThread) {
-        Name = "WindowsOpenSshPipe.Listener",
-        IsBackground = true
-      };
+      var thread = new Thread(listenerThread) {Name = "WindowsOpenSshPipe.Listener", IsBackground = true};
       thread.Start();
     }
-    
+
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out long ClientProcessId);
 
@@ -66,14 +66,15 @@ namespace dlech.SshAgentLib
     {
       try {
         while (true) {
-          var server = new NamedPipeServerStream(agentPipeId, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
-            PipeTransmissionMode.Byte, PipeOptions.WriteThrough, receiveBufferSize, receiveBufferSize);
+          var server = new NamedPipeServerStream(agentPipeId, PipeDirection.InOut,
+                                                 NamedPipeServerStream.MaxAllowedServerInstances,
+                                                 PipeTransmissionMode.Byte, PipeOptions.WriteThrough,
+                                                 receiveBufferSize, receiveBufferSize);
           listeningServer = server;
           server.WaitForConnection();
           listeningServer = null;
           var thread = new Thread(connectionThread) {
-            Name = string.Format("WindowsOpenSshPipe.Connection{0}", threadId++),
-            IsBackground = true
+            Name = string.Format("WindowsOpenSshPipe.Connection{0}", threadId++), IsBackground = true
           };
           thread.Start(server);
         }
@@ -102,7 +103,7 @@ namespace dlech.SshAgentLib
         // TODO: add event to notify when there is a problem
       }
     }
-    
+
     public void Dispose()
     {
       Dispose(true);
