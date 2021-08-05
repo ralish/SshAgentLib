@@ -123,10 +123,6 @@
     <Compile Include="PpkFormatter.cs" />
     <Compile Include="UnixAgent.cs" />
     <Compile Include="Agent.cs" />
-    <Compile Include="Microsoft\AsyncUserToken.cs" />
-    <Compile Include="Microsoft\BufferManager.cs" />
-    <Compile Include="Microsoft\Server.cs" />
-    <Compile Include="Microsoft\SocketAsyncEventArgPool.cs" />
     <Compile Include="UnixClient.cs" />
     <Compile Include="PinnedArray.cs" />
     <Compile Include="WinInternals.cs" />
