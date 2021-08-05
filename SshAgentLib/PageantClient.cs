@@ -28,6 +28,9 @@ using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+using static dlech.SshAgentLib.NativeMethods;
+
+
 // code based on agent_query function in winpgntc.c from PuTTY */
 
 namespace dlech.SshAgentLib
@@ -39,21 +42,6 @@ namespace dlech.SshAgentLib
 
     private const int WM_COPYDATA = 0x004A;
     private const long AGENT_COPYDATA_ID = 0x804e50ba;
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg,
-      IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr FindWindow(String sClassName, String sAppName);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct COPYDATASTRUCT
-    {
-      public IntPtr dwData;
-      public int cbData;
-      public IntPtr lpData;
-    }
 
     public override byte[] SendMessage(byte[] aMessage)
     {
@@ -75,12 +63,12 @@ namespace dlech.SshAgentLib
           } else {
             copyData.dwData = new IntPtr(AGENT_COPYDATA_ID);
           }
-          copyData.cbData = mapName.Length + 1;
+          copyData.cbData = (uint)mapName.Length + 1;
           copyData.lpData = Marshal.StringToCoTaskMemAnsi(mapName);
           IntPtr copyDataPtr = Marshal.AllocHGlobal(Marshal.SizeOf(copyData));
           Marshal.StructureToPtr(copyData, copyDataPtr, false);
           var resultPtr =
-            SendMessage(hwnd, WM_COPYDATA, IntPtr.Zero, copyDataPtr);
+            NativeMethods.SendMessage(hwnd, WM_COPYDATA, IntPtr.Zero, copyDataPtr);
           Marshal.FreeHGlobal(copyData.lpData);
           Marshal.FreeHGlobal(copyDataPtr);
           if (resultPtr == IntPtr.Zero) {

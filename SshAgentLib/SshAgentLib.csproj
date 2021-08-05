@@ -94,6 +94,7 @@
     <Compile Include="Crypto\Ed25519PublicKeyParameter.cs" />
     <Compile Include="Crypto\Ed25519Signer.cs" />
     <Compile Include="Crypto\SaltParseException.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="WindowsOpenSshPipe.cs" />
     <Compile Include="MsysSocket .cs" />
     <Compile Include="CygwinSocket.cs" />

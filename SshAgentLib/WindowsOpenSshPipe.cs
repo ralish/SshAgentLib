@@ -29,6 +29,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
+using static dlech.SshAgentLib.NativeMethods;
+
 
 namespace dlech.SshAgentLib
 {
@@ -56,9 +58,6 @@ namespace dlech.SshAgentLib
 
       AwaitConnection();
     }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out uint ClientProcessId);
 
     private void AwaitConnection()
     {

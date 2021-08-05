@@ -1,4 +1,4 @@
-//
+﻿//
 // PageantAgent.cs
 //
 // Author(s): David Lechner <david@lechnology.com>
@@ -33,6 +33,9 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
+
+using static dlech.SshAgentLib.NativeMethods;
+
 
 namespace dlech.SshAgentLib
 {
@@ -75,81 +78,6 @@ namespace dlech.SshAgentLib
     #endregion
 
 
-    #region /* delegates */
-
-    private delegate IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    #endregion
-
-
-    #region /* structs */
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    private struct WNDCLASS
-    {
-      public uint style;
-      public WndProc lpfnWndProc;
-      public int cbClsExtra;
-      public int cbWndExtra;
-      public IntPtr hInstance;
-      public IntPtr hIcon;
-      public IntPtr hCursor;
-      public IntPtr hbrBackground;
-      [MarshalAs(UnmanagedType.LPWStr)]
-      public string lpszMenuName;
-      [MarshalAs(UnmanagedType.LPWStr)]
-      public string lpszClassName;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct COPYDATASTRUCT
-    {
-      public IntPtr dwData;
-      public int cbData;
-      public IntPtr lpData;
-    }
-
-    #endregion
-
-
-    #region /* externs */
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr FindWindow(String sClassName, String sAppName);
-
-    /// See http://msdn.microsoft.com/en-us/library/windows/desktop/ms633586%28v=vs.85%29.aspx
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern System.UInt16 RegisterClassW([In] ref WNDCLASS lpWndClass);
-
-    /// See http://msdn.microsoft.com/en-us/library/windows/desktop/ms632680%28v=vs.85%29.aspx
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr CreateWindowExW(
-       UInt32 dwExStyle,
-       [MarshalAs(UnmanagedType.LPWStr)]
-       string lpClassName,
-       [MarshalAs(UnmanagedType.LPWStr)]
-       string lpWindowName,
-       UInt32 dwStyle,
-       Int32 x,
-       Int32 y,
-       Int32 nWidth,
-       Int32 nHeight,
-       IntPtr hWndParent,
-       IntPtr hMenu,
-       IntPtr hInstance,
-       IntPtr lpParam
-    );
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern System.IntPtr DefWindowProcW(
-        IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool DestroyWindow(IntPtr hWnd);
-
-    #endregion
-
-
     #region /* constructors */
 
     /// <summary>
@@ -176,7 +104,7 @@ namespace dlech.SshAgentLib
       wind_class.lpszClassName = className;
       wind_class.lpfnWndProc = customWndProc;
 
-      UInt16 class_atom = RegisterClassW(ref wind_class);
+      UInt16 class_atom = RegisterClass(ref wind_class);
 
       int last_error = Marshal.GetLastWin32Error();
       if (class_atom == 0 && last_error != ERROR_CLASS_ALREADY_EXISTS) {
@@ -326,7 +254,7 @@ namespace dlech.SshAgentLib
       IntPtr hwnd;
       lock (lockObject) {
         // Create window
-        hwnd = CreateWindowExW(
+        hwnd = CreateWindowEx(
             0, // dwExStyle
             className, // lpClassName
             className, // lpWindowName
@@ -381,7 +309,7 @@ namespace dlech.SshAgentLib
     {
       // we only care about COPYDATA messages
       if (msg != WM_COPYDATA) {
-        return DefWindowProcW(hWnd, msg, wParam, lParam);
+        return DefWindowProc(hWnd, msg, wParam, lParam);
       }
 
       IntPtr result = IntPtr.Zero;
@@ -472,86 +400,9 @@ namespace dlech.SshAgentLib
       }
     }
 
-    [Flags()]
-    private enum AccessRights : long
-    {
-      DELETE = 0x00010000L,
-      READ_CONTROL = 0x00020000L,
-      WRITE_DAC = 0x00040000L,
-      WRITE_OWNER = 0x00080000L,
-      SYNCHRONIZE = 0x00100000L,
-
-      STANDARD_RIGHTS_REQUIRED = 0x000F0000L,
-
-      STANDARD_RIGHTS_READ = READ_CONTROL,
-      STANDARD_RIGHTS_WRITE = READ_CONTROL,
-      STANDARD_RIGHTS_EXECUTE = READ_CONTROL,
-
-      STANDARD_RIGHTS_ALL = 0x001F0000L,
-
-      SPECIFIC_RIGHTS_ALL = 0x0000FFFFL,
-
-      // AccessSystemAcl access type
-      ACCESS_SYSTEM_SECURITY = 0x01000000L,
-
-      // MaximumAllowed access type
-      MAXIMUM_ALLOWED = 0x02000000L,
-
-      // These are the generic rights.
-      GENERIC_READ = 0x80000000L,
-      GENERIC_WRITE = 0x40000000L,
-      GENERIC_EXECUTE = 0x20000000L,
-      GENERIC_ALL = 0x10000000L
-    }
-
-    private enum SE_OBJECT_TYPE
-    {
-      SE_UNKNOWN_OBJECT_TYPE = 0,
-      SE_FILE_OBJECT,
-      SE_SERVICE,
-      SE_PRINTER,
-      SE_REGISTRY_KEY,
-      SE_LMSHARE,
-      SE_KERNEL_OBJECT,
-      SE_WINDOW_OBJECT,
-      SE_DS_OBJECT,
-      SE_DS_OBJECT_ALL,
-      SE_PROVIDER_DEFINED_OBJECT,
-      SE_WMIGUID_OBJECT,
-      SE_REGISTRY_WOW64_32KEY
-    }
-
-    [Flags()]
-    private enum SECURITY_INFORMATION : long
-    {
-      OWNER_SECURITY_INFORMATION = 0x00000001L,
-      GROUP_SECURITY_INFORMATION = 0x00000002L,
-      DACL_SECURITY_INFORMATION = 0x00000004L,
-      SACL_SECURITY_INFORMATION = 0x00000008L,
-      LABEL_SECURITY_INFORMATION = 0x00000010L,
-
-      PROTECTED_DACL_SECURITY_INFORMATION = 0x80000000L,
-      PROTECTED_SACL_SECURITY_INFORMATION = 0x40000000L,
-      UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000L,
-      UNPROTECTED_SACL_SECURITY_INFORMATION = 0x10000000L
-    }
-
-    [DllImport("kernel32")]
-    private static extern IntPtr OpenProcess(AccessRights dwDesiredAccess,
-      bool bInheritHandle, long dwProcessId);
-
-    [DllImport("Advapi32")]
-    private static extern long GetSecurityInfo(IntPtr handle, 
-      SE_OBJECT_TYPE objectType, SECURITY_INFORMATION securityInfo,
-      out IntPtr ppsidOwner, out IntPtr ppsidGroup, out IntPtr ppDacl,
-      out IntPtr ppSacl, out IntPtr ppSecurityDescriptor);
-
-    [DllImport("kernel32")]
-    private static extern bool CloseHandle(IntPtr hObject);
-
     private SecurityIdentifier GetProcessOwnerSID(int pid)
     {
-      var processHandle = OpenProcess(AccessRights.MAXIMUM_ALLOWED, false, pid);
+      var processHandle = OpenProcess(ACCESS_MASK.MAXIMUM_ALLOWED, false, (uint)pid);
       if (processHandle == IntPtr.Zero) {
         return null;
       }
