@@ -1,5 +1,5 @@
-//  Copyright (c) 2006, Gustavo Franco
-//  Copyright � Decebal Mihailescu 2007-2010
+﻿//  Copyright (c) 2006, Gustavo Franco
+//  Copyright © Decebal Mihailescu 2007-2010
 
 //  Email:  gustavo_franco@hotmail.com
 //  All rights reserved.
@@ -28,94 +28,6 @@ using FileDialogExtenders;
 
 namespace Win32Types
 {
-	#region WINDOWINFO
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct WINDOWINFO
-    {
-       public UInt32 cbSize;
-       public RECT   rcWindow;
-       public RECT   rcClient;
-       public UInt32 dwStyle;
-       public UInt32 dwExStyle;
-       public UInt32 dwWindowStatus;
-       public UInt32 cxWindowBorders;
-       public UInt32 cyWindowBorders;
-       public UInt16 atomWindowType;
-       public UInt16 wCreatorVersion;
-   }
-    #endregion
-
-    #region POINT
-
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct POINT
-	{
-		public int x;
-		public int y;
-
-        #region Constructors
-        public POINT(int x, int y)
-		{
-			this.x = x;
-			this.y = y;
-		}
-
-        public POINT(Point point)
-        {
-            x = point.X;
-            y = point.Y;
-        }
-        #endregion
-    }
-	#endregion
-
-    #region RECT
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct RECT 
-    { 
-        public int left; 
-        public int top; 
-        public int right; 
-        public int bottom;
-
-        #region Properties
-
-        public POINT Location
-        {
-            get {return new POINT((int) left, (int) top);}
-            set
-            {
-                right   -= (left -  value.x);
-                bottom  -= (bottom -  value.y);
-                left    =  value.x;
-                top     =  value.y;
-            }
-        }
-
-        internal uint Width
-        {
-            get {return (uint)Math.Abs(right - left);}
-            set {right = left + (int)value;}
-        }
-
-        internal uint Height
-        {
-            get {return (uint)Math.Abs(bottom - top);}
-            set {bottom = top + (int)value;}
-        }
-        #endregion
-
-        #region Overrides
-        public override string ToString()
-        {
-            return left + ":" + top + ":" + right + ":" + bottom;
-        }
-        #endregion
-    }
-    #endregion
-
     #region WINDOWPOS
 
     [StructLayout(LayoutKind.Sequential)]
@@ -137,16 +49,6 @@ namespace Win32Types
         #endregion
     }
     #endregion
-
-    //#region NCCALCSIZE_PARAMS
-    //internal struct NCCALCSIZE_PARAMS
-    //{
-    //    public RECT     rgrc1;
-    //    public RECT     rgrc2;
-    //    public RECT     rgrc3;
-    //    public IntPtr   lppos;
-    //}
-    //#endregion
 
     #region NMHDR
     

@@ -1,5 +1,5 @@
-//  Copyright (c) 2006, Gustavo Franco
-//  Copyright � Decebal Mihailescu 2007-2010
+﻿//  Copyright (c) 2006, Gustavo Franco
+//  Copyright © Decebal Mihailescu 2007-2010
 
 //  Email:  gustavo_franco@hotmail.com
 //  All rights reserved.
@@ -32,6 +32,9 @@ using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D;
 using Win32Types;
 
+using static dlech.SshAgentLib.WinForms.NativeMethods;
+
+
 namespace FileDialogExtenders
 {
     #region Base class
@@ -56,12 +59,12 @@ namespace FileDialogExtenders
         #endregion
 
         #region Constants Declaration
-        private const SetWindowPosFlags UFLAGSHIDE =
-            SetWindowPosFlags.SWP_NOACTIVATE |
-            SetWindowPosFlags.SWP_NOOWNERZORDER |
-            SetWindowPosFlags.SWP_NOMOVE |
-            SetWindowPosFlags.SWP_NOSIZE |
-            SetWindowPosFlags.SWP_HIDEWINDOW;
+        private const WINDOW_POS_FLAGS UFLAGSHIDE =
+          WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+          WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+          WINDOW_POS_FLAGS.SWP_NOMOVE |
+          WINDOW_POS_FLAGS.SWP_NOSIZE |
+          WINDOW_POS_FLAGS.SWP_HIDEWINDOW;
         #endregion
 
         #region Variables Declaration
@@ -245,7 +248,7 @@ namespace FileDialogExtenders
             {
                 _EnableOkBtn = value;
                 if (!DesignMode && MSDialog != null && _hOKButton != IntPtr.Zero)
-                    Win32Types.NativeMethods.EnableWindow(_hOKButton, _EnableOkBtn);
+                    EnableWindow(_hOKButton, _EnableOkBtn);
             }
         }
 
@@ -289,9 +292,9 @@ namespace FileDialogExtenders
                     MSDialog.Disposed += new EventHandler(FileDialogControlBase_DialogDisposed);
                     MSDialog.HelpRequest += new EventHandler(FileDialogControlBase_HelpRequest);
                     FileDlgEnableOkBtn = _EnableOkBtn;//that's design time value
-                    NativeMethods.SetWindowText(new HandleRef(_dlgWrapper,_dlgWrapper.Handle), _Caption);
+                    SetWindowText(new HandleRef(_dlgWrapper,_dlgWrapper.Handle), _Caption);
                     //will work only for open dialog, save dialog will be overriden internally by windows
-                    NativeMethods.SetWindowText(new HandleRef(this,_hOKButton), _OKCaption);//SetDlgItemText fails too 
+                    SetWindowText(new HandleRef(this,_hOKButton), _OKCaption);//SetDlgItemText fails too 
                     //bool res = NativeMethods.SetDlgItemText(NativeMethods.GetParent(Handle), (int)ControlsId.ButtonOk, FileDlgOkCaption);
                 }
             }
@@ -302,21 +305,21 @@ namespace FileDialogExtenders
             try
             {
                 //handle of the "defView" --> container of the listView  
-                IntPtr hWndWin = NativeMethods.FindWindowEx(_dlgWrapper.Handle, IntPtr.Zero, "SHELLDLL_DefView", "");
+                IntPtr hWndWin = FindWindowEx(_dlgWrapper.Handle, IntPtr.Zero, "SHELLDLL_DefView", "");
 
                 if (hWndWin != IntPtr.Zero)
                 {
                     //change to details view
-                    NativeMethods.SendMessage(new HandleRef(this, hWndWin), (int)Msg.WM_COMMAND, (IntPtr)(int)DefaultViewType.Details, IntPtr.Zero);
+                    SendMessage(new HandleRef(this, hWndWin), (int)Msg.WM_COMMAND, (IntPtr)(int)DefaultViewType.Details, IntPtr.Zero);
 
                     #region  sort by date
                     int HDN_FIRST = (-300);
                     int HDN_ITEMCLICKW = (HDN_FIRST - 22);
 
                     //get the ListView//s hWnd
-                    IntPtr hWndLV = NativeMethods.FindWindowEx(hWndWin, IntPtr.Zero, "SysListView32", IntPtr.Zero);
+                    IntPtr hWndLV = FindWindowEx(hWndWin, IntPtr.Zero, "SysListView32", IntPtr.Zero);
                     //get the ColumnHeaders hWnd
-                    IntPtr hWndColHd = NativeMethods.FindWindowEx(hWndLV, IntPtr.Zero, "SysHeader32", IntPtr.Zero);
+                    IntPtr hWndColHd = FindWindowEx(hWndLV, IntPtr.Zero, "SysHeader32", IntPtr.Zero);
 
                     //now click on column 3 to sort for date
                     NMHEADER NMH = new NMHEADER();
@@ -333,9 +336,9 @@ namespace FileDialogExtenders
                         // Copy the struct to unmanaged memory.
                         Marshal.StructureToPtr(NMH, ptrNMH, false);
 
-                        NativeMethods.SendMessage(new HandleRef(this, hWndLV), (uint)Msg.WM_NOTIFY, IntPtr.Zero, ptrNMH);
+                        SendMessage(new HandleRef(this, hWndLV), (uint)Msg.WM_NOTIFY, IntPtr.Zero, ptrNMH);
                         //click again for descending order = newest files first
-                        NativeMethods.SendMessage(new HandleRef(this, hWndLV), (uint)Msg.WM_NOTIFY, IntPtr.Zero, ptrNMH);
+                        SendMessage(new HandleRef(this, hWndLV), (uint)Msg.WM_NOTIFY, IntPtr.Zero, ptrNMH);
                     }
                     finally
                     {
@@ -395,10 +398,10 @@ namespace FileDialogExtenders
 
         private void UpdateListView()
         {
-            _hListViewPtr = Win32Types.NativeMethods.GetDlgItem(_hFileDialogHandle, (int)ControlsId.DefaultView);
+            _hListViewPtr = GetDlgItem(_hFileDialogHandle, (int)ControlsId.DefaultView);
             if (FileDlgDefaultViewMode != FolderViewMode.Default && _hFileDialogHandle != IntPtr.Zero)
             {
-                NativeMethods.SendMessage(new HandleRef(this, _hListViewPtr), (int)Msg.WM_COMMAND, (IntPtr)(int)FileDlgDefaultViewMode, IntPtr.Zero);
+                SendMessage(new HandleRef(this, _hListViewPtr), (int)Msg.WM_COMMAND, (IntPtr)(int)FileDlgDefaultViewMode, IntPtr.Zero);
                 if (FileDlgDefaultViewMode == FolderViewMode.Details || FileDlgDefaultViewMode == FolderViewMode.List)
                     SortViewByColumn(0);
             }

@@ -25,6 +25,9 @@ using Win32Types;
 using System.ComponentModel;
 using Microsoft.Win32;
 
+using static dlech.SshAgentLib.WinForms.NativeMethods;
+
+
 namespace FileDialogExtenders
 {
     public static class Extensions
@@ -119,12 +122,11 @@ namespace FileDialogExtenders
         //    FieldInfo fieldInfo = type.GetField("hkey", BindingFlags.Instance | BindingFlags.NonPublic);
         //    return (IntPtr)fieldInfo.GetValue(registryKey);
         //}
-        static readonly UIntPtr HKEY_CURRENT_USER = new UIntPtr(0x80000001u);
         private static IntPtr InitializeRegistry()
         {
             IntPtr hkMyCU;
-            NativeMethods.RegCreateKeyW(HKEY_CURRENT_USER, TempKeyName, out hkMyCU);
-            NativeMethods.RegOverridePredefKey(HKEY_CURRENT_USER, hkMyCU);
+            RegCreateKey((IntPtr)HKEY_CURRENT_USER, TempKeyName, out hkMyCU);
+            RegOverridePredefKey((IntPtr)HKEY_CURRENT_USER, hkMyCU);
             return hkMyCU;
         }
 
@@ -133,8 +135,8 @@ namespace FileDialogExtenders
         {
             try
             {
-                NativeMethods.RegOverridePredefKey(HKEY_CURRENT_USER, IntPtr.Zero);
-                NativeMethods.RegCloseKey(hkMyCU);
+                RegOverridePredefKey((IntPtr)HKEY_CURRENT_USER, IntPtr.Zero);
+                RegCloseKey(hkMyCU);
             }
             catch 
             {

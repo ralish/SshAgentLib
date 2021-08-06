@@ -1,5 +1,5 @@
-//  Copyright (c) 2006, Gustavo Franco
-//  Copyright � Decebal Mihailescu 2007-2010
+﻿//  Copyright (c) 2006, Gustavo Franco
+//  Copyright © Decebal Mihailescu 2007-2010
 
 //  Email:  gustavo_franco@hotmail.com
 //  All rights reserved.
@@ -32,6 +32,9 @@ using System.Runtime.InteropServices;
 using System.Drawing.Drawing2D;
 using Win32Types;
 
+using static dlech.SshAgentLib.WinForms.NativeMethods;
+
+
 namespace FileDialogExtenders
 {
     public partial class FileDialogControlBase
@@ -40,10 +43,10 @@ namespace FileDialogExtenders
 
         private class MSFileDialogWrapper : NativeWindow, IDisposable
         {
-            public const SetWindowPosFlags UFLAGSSIZE =
-                SetWindowPosFlags.SWP_NOACTIVATE |
-                SetWindowPosFlags.SWP_NOOWNERZORDER |
-                SetWindowPosFlags.SWP_NOMOVE;
+            public const WINDOW_POS_FLAGS UFLAGSSIZE =
+              WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+              WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+              WINDOW_POS_FLAGS.SWP_NOMOVE;
             #region Delegates
 
             #endregion
@@ -107,7 +110,7 @@ namespace FileDialogExtenders
                             case (uint)DialogChangeStatus.CDN_SELCHANGE:
                                 {
                                     StringBuilder filePath = new StringBuilder(256);
-                                    NativeMethods.SendMessage(new HandleRef(this, NativeMethods.GetParent(Handle)), (uint)DialogChangeProperties.CDM_GETFILEPATH, (IntPtr)256, filePath);
+                                    SendMessage(new HandleRef(this, GetParent(Handle)), (uint)DialogChangeProperties.CDM_GETFILEPATH, (IntPtr)256, filePath);
                                     if (_CustomCtrl != null)
                                     {
                                         _CustomCtrl.OnFileNameChanged(this, filePath.ToString());                                        
@@ -117,7 +120,7 @@ namespace FileDialogExtenders
                             case (uint)DialogChangeStatus.CDN_FOLDERCHANGE:
                                 {
                                     StringBuilder folderPath = new StringBuilder(256);
-                                    NativeMethods.SendMessage(new HandleRef(this, NativeMethods.GetParent(Handle)), (int)DialogChangeProperties.CDM_GETFOLDERPATH, (IntPtr)256, folderPath);
+                                    SendMessage(new HandleRef(this, GetParent(Handle)), (int)DialogChangeProperties.CDM_GETFOLDERPATH, (IntPtr)256, folderPath);
                                     if (_CustomCtrl != null)
                                         _CustomCtrl.OnFolderNameChanged(this, folderPath.ToString());
                                 }
@@ -159,7 +162,7 @@ namespace FileDialogExtenders
                         }
                         break;
                     case Msg.WM_COMMAND:
-                        switch (NativeMethods.GetDlgCtrlID(m.LParam))//switch (m.WParam & 0x0000ffff)
+                        switch (GetDlgCtrlID(m.LParam))//switch (m.WParam & 0x0000ffff)
                         {
                             case (int)ControlsId.ButtonOk://OK
                                 break;
@@ -180,22 +183,18 @@ namespace FileDialogExtenders
         private class WholeDialogWrapper: NativeWindow, IDisposable
         {
             #region Constants Declaration
-            private const SetWindowPosFlags UFLAGSSIZEEX =
-                SetWindowPosFlags.SWP_NOACTIVATE |
-                SetWindowPosFlags.SWP_NOOWNERZORDER |
-                SetWindowPosFlags.SWP_NOMOVE |
-                SetWindowPosFlags.SWP_ASYNCWINDOWPOS |
-                SetWindowPosFlags.SWP_DEFERERASE;
-            private const SetWindowPosFlags UFLAGSHIDE =
-                SetWindowPosFlags.SWP_NOACTIVATE |
-                SetWindowPosFlags.SWP_NOOWNERZORDER |
-                SetWindowPosFlags.SWP_NOMOVE |
-                SetWindowPosFlags.SWP_NOSIZE |
-                SetWindowPosFlags.SWP_HIDEWINDOW;
-            private const SetWindowPosFlags UFLAGSZORDER =
-                SetWindowPosFlags.SWP_NOACTIVATE |
-                SetWindowPosFlags.SWP_NOMOVE |
-                SetWindowPosFlags.SWP_NOSIZE;
+            private const WINDOW_POS_FLAGS UFLAGSSIZEEX =
+              WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+              WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+              WINDOW_POS_FLAGS.SWP_NOMOVE |
+              WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS |
+              WINDOW_POS_FLAGS.SWP_DEFERERASE;
+            private const WINDOW_POS_FLAGS UFLAGSHIDE =
+              WINDOW_POS_FLAGS.SWP_NOACTIVATE |
+              WINDOW_POS_FLAGS.SWP_NOOWNERZORDER |
+              WINDOW_POS_FLAGS.SWP_NOMOVE |
+              WINDOW_POS_FLAGS.SWP_NOSIZE |
+              WINDOW_POS_FLAGS.SWP_HIDEWINDOW;
             const uint WS_VISIBLE = 0x10000000;
             static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
             static readonly IntPtr NULL = IntPtr.Zero;
@@ -262,9 +261,9 @@ namespace FileDialogExtenders
             {
                 //_hDummyWnd = Win32.CreateWindowEx(0x00050100, "Message", null, 0x16C80000, -10000, -10000, 0, 0,
                 //parent.Handle, NULL, NULL, NULL);
-                _hDummyWnd = NativeMethods.CreateWindowEx(0, "Message", null, WS_VISIBLE, 0, 0, 0, 0,
+                _hDummyWnd = CreateWindowEx(0, "Message", null, WS_VISIBLE, 0, 0, 0, 0,
                 HWND_MESSAGE, NULL, NULL, NULL);
-                if (_hDummyWnd == NULL || !NativeMethods.IsWindow(_hDummyWnd))
+                if (_hDummyWnd == NULL || !IsWindow(_hDummyWnd))
                     throw new ApplicationException("Unable to create a dummy window");
                 AssignHandle(_hDummyWnd);
             }
@@ -299,7 +298,7 @@ namespace FileDialogExtenders
                 }
                 if (_hDummyWnd != IntPtr.Zero)
                 {
-                    NativeMethods.DestroyWindow(_hDummyWnd);
+                    DestroyWindow(_hDummyWnd);
                     DestroyHandle();
                     _hDummyWnd = IntPtr.Zero;
                 }
@@ -309,16 +308,16 @@ namespace FileDialogExtenders
             #region Private Methods
             private void PopulateWindowsHandlers()
             {
-                NativeMethods.EnumChildWindows(new HandleRef(this,_hFileDialogHandle), new NativeMethods.EnumWindowsCallBack(FileDialogEnumWindowCallBack), 0);
+                EnumChildWindows(new HandleRef(this,_hFileDialogHandle), new EnumChildProc(FileDialogEnumWindowCallBack), IntPtr.Zero);
             }
 
-            private bool FileDialogEnumWindowCallBack(IntPtr hwnd, int lParam)
+            private bool FileDialogEnumWindowCallBack(IntPtr hwnd, IntPtr lParam)
             {
                 StringBuilder className = new StringBuilder(256);
-                NativeMethods.GetClassName(new HandleRef(this,hwnd), className, className.Capacity);
-                int controlID = NativeMethods.GetDlgCtrlID(hwnd);
+                GetClassName(new HandleRef(this,hwnd), className, className.Capacity);
+                int controlID = GetDlgCtrlID(hwnd);
                 WINDOWINFO windowInfo;
-                NativeMethods.GetWindowInfo(new HandleRef(this,hwnd), out windowInfo);
+                GetWindowInfo(new HandleRef(this,hwnd), out windowInfo);
 
                 // Dialog Window
                 if (className.ToString().StartsWith("#32770"))
@@ -332,7 +331,7 @@ namespace FileDialogExtenders
                 {
                     case ControlsId.DefaultView:
                         _CustomControl._hListViewPtr = hwnd;
-                        NativeMethods.GetWindowInfo(new HandleRef(this,hwnd), out _ListViewInfo);
+                        GetWindowInfo(new HandleRef(this,hwnd), out _ListViewInfo);
                         _CustomControl.UpdateListView();
                         break;
                     case ControlsId.ComboFolder:
@@ -394,8 +393,8 @@ namespace FileDialogExtenders
                 mInitializated = true;
 
                 // Lets get information about the current open dialog
-                NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref _DialogClientRect);
-                NativeMethods.GetWindowRect(new HandleRef(this,_hFileDialogHandle), ref _DialogWindowRect);
+                GetClientRect(new HandleRef(this,_hFileDialogHandle), out _DialogClientRect);
+                GetWindowRect(new HandleRef(this,_hFileDialogHandle), out _DialogWindowRect);
 
                 // Lets borrow the Handles from the open dialog control
                 PopulateWindowsHandlers();
@@ -416,10 +415,9 @@ namespace FileDialogExtenders
                         break;
                 }
                 // Everything is ready, now lets change the parent
-                NativeMethods.SetParent(new HandleRef(_CustomControl,_CustomControl.Handle), new HandleRef(this,_hFileDialogHandle));
+                SetParent(new HandleRef(_CustomControl,_CustomControl.Handle), new HandleRef(this,_hFileDialogHandle));
 
                 // Send the control to the back
-                // NativeMethods.SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, 0, 0, 0, 0, UFLAGSZORDER);
                 _CustomControl.MSDialog.Disposed += new EventHandler(DialogWrappper_Disposed);
             }
 
@@ -435,17 +433,17 @@ namespace FileDialogExtenders
             protected override void WndProc(ref Message m)
             {
                 RECT currentSize = new RECT();
-                const SetWindowPosFlags flags = SetWindowPosFlags.SWP_NOZORDER | SetWindowPosFlags.SWP_NOMOVE ;//| SetWindowPosFlags.SWP_NOREPOSITION | SetWindowPosFlags.SWP_ASYNCWINDOWPOS | SetWindowPosFlags.SWP_SHOWWINDOW | SetWindowPosFlags.SWP_DRAWFRAME;
+                const WINDOW_POS_FLAGS flags = WINDOW_POS_FLAGS.SWP_NOZORDER | WINDOW_POS_FLAGS.SWP_NOMOVE;
                 switch ((Msg)m.Msg)
                 {
                     case Msg.WM_SHOWWINDOW:
                         InitControls();
-                        NativeMethods.GetWindowRect(new HandleRef(this,_hFileDialogHandle), ref currentSize);
+                        GetWindowRect(new HandleRef(this,_hFileDialogHandle), out currentSize);
                         //restore original sizes
                         int top = (_CustomControl.Parent == null) ? currentSize.top : _CustomControl.Parent.Top;
                         int right = (_CustomControl.Parent == null) ? currentSize.right : _CustomControl.Parent.Right;
                         RECT currentClientSize = new RECT();
-                        NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref currentClientSize);
+                        GetClientRect(new HandleRef(this,_hFileDialogHandle), out currentClientSize);
                         int dy = (int)(currentSize.Height - currentClientSize.Height);
                         int dx = (int)(currentSize.Width - currentClientSize.Width);
                         int Height = 0;
@@ -454,17 +452,17 @@ namespace FileDialogExtenders
                         {
                             case AddonWindowLocation.Bottom:
                                 Width = Math.Max(_CustomControl.OriginalCtrlSize.Width + dx, (int)FileDialogControlBase.OriginalDlgWidth);
-                                NativeMethods.SetWindowPos(_hFileDialogHandle, (IntPtr)ZOrderPos.HWND_BOTTOM, right, top, Width, (int)currentSize.Height, flags);
+                                SetWindowPos(_hFileDialogHandle, (IntPtr)ZOrderPos.HWND_BOTTOM, right, top, Width, (int)currentSize.Height, flags);
                                 break;
                             case AddonWindowLocation.Right:
                                 Height = Math.Max(_CustomControl.OriginalCtrlSize.Height + dy, (int)FileDialogControlBase.OriginalDlgHeight);
-                                NativeMethods.SetWindowPos(_hFileDialogHandle, (IntPtr)ZOrderPos.HWND_BOTTOM, right, top, (int)currentSize.Width, Height, flags);
+                                SetWindowPos(_hFileDialogHandle, (IntPtr)ZOrderPos.HWND_BOTTOM, right, top, (int)currentSize.Width, Height, flags);
                                 break;
                         }
                         break;
                     case Msg.WM_SIZE:
                         {
-                            NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref currentSize);
+                            GetClientRect(new HandleRef(this,_hFileDialogHandle), out currentSize);
                             switch (_CustomControl.FileDlgStartLocation)
                             {
                                 case AddonWindowLocation.Bottom:
@@ -485,20 +483,20 @@ namespace FileDialogExtenders
                         break;
                     case Msg.WM_SIZING:
 
-                        NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref currentSize);
+                        GetClientRect(new HandleRef(this,_hFileDialogHandle), out currentSize);
                         switch (_CustomControl.FileDlgStartLocation)
                         {
                             case AddonWindowLocation.Right:
                                 if (currentSize.Height != _CustomControl.Height)
-                                    NativeMethods.SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, 0, 0, (int)_CustomControl.Width, (int)currentSize.Height, UFLAGSSIZEEX);
+                                    SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, 0, 0, (int)_CustomControl.Width, (int)currentSize.Height, UFLAGSSIZEEX);
                                 break;
                             case AddonWindowLocation.Bottom:
                                 if (currentSize.Height != _CustomControl.Height)
-                                    NativeMethods.SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, 0, 0, (int)currentSize.Width, (int)_CustomControl.Height, UFLAGSSIZEEX);
+                                    SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, 0, 0, (int)currentSize.Width, (int)_CustomControl.Height, UFLAGSSIZEEX);
                                 break;
                             case AddonWindowLocation.BottomRight:
                                 if (currentSize.Width != _CustomControl.Width || currentSize.Height != _CustomControl.Height)
-                                    NativeMethods.SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, (int)currentSize.Width, (int)currentSize.Height, (int)currentSize.Width, (int)currentSize.Height, UFLAGSSIZEEX);
+                                    SetWindowPos(_CustomControl.Handle, (IntPtr)ZOrderPos.HWND_BOTTOM, (int)currentSize.Width, (int)currentSize.Height, (int)currentSize.Width, (int)currentSize.Height, UFLAGSSIZEEX);
                                 break;
                         }
                         break;
@@ -520,7 +518,7 @@ namespace FileDialogExtenders
                                             Marshal.StructureToPtr(pos, m.LParam, true);
 
                                             currentSize = new RECT();
-                                            NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref currentSize);
+                                            GetClientRect(new HandleRef(this,_hFileDialogHandle), out currentSize);
                                             if (_CustomControl.Height < (int)currentSize.Height)
                                                 _CustomControl.Height = (int)currentSize.Height;
                                             break;
@@ -532,7 +530,7 @@ namespace FileDialogExtenders
                                             Marshal.StructureToPtr(pos, m.LParam, true);
 
                                             currentSize = new RECT();
-                                            NativeMethods.GetClientRect(new HandleRef(this,_hFileDialogHandle), ref currentSize);
+                                            GetClientRect(new HandleRef(this,_hFileDialogHandle), out currentSize);
                                             if (_CustomControl.Width < (int)currentSize.Width)
                                                 _CustomControl.Width = (int)currentSize.Width;
                                             break;
@@ -556,9 +554,9 @@ namespace FileDialogExtenders
                         if (m.WParam == (IntPtr)ImeNotify.IMN_CLOSESTATUSWINDOW)
                         {
                             mIsClosing = true;
-                            NativeMethods.SetWindowPos(_hFileDialogHandle, IntPtr.Zero, 0, 0, 0, 0, UFLAGSHIDE);
-                            NativeMethods.GetWindowRect(new HandleRef(this,_hFileDialogHandle), ref _DialogWindowRect);
-                            NativeMethods.SetWindowPos(_hFileDialogHandle, IntPtr.Zero,
+                            SetWindowPos(_hFileDialogHandle, IntPtr.Zero, 0, 0, 0, 0, UFLAGSHIDE);
+                            GetWindowRect(new HandleRef(this,_hFileDialogHandle), out _DialogWindowRect);
+                            SetWindowPos(_hFileDialogHandle, IntPtr.Zero,
                                 (int)(_DialogWindowRect.left),
                                 (int)(_DialogWindowRect.top),
                                 (int)(mOriginalSize.Width),
@@ -584,14 +582,14 @@ namespace FileDialogExtenders
                             ReleaseHandle();//release the dummy window
                             AssignHandle(_hFileDialogHandle);//assign the native open file handle to grab the messages
 #pragma warning disable 0197, 0414
-                            NativeMethods.GetWindowRect(new HandleRef(this,_hFileDialogHandle), ref _CustomControl._OpenDialogWindowRect);
+                            GetWindowRect(new HandleRef(this,_hFileDialogHandle), out _CustomControl._OpenDialogWindowRect);
 #pragma warning restore 0197, 0414
                             _CustomControl._hFileDialogHandle = _hFileDialogHandle;
 
                         }
                         break;
                     case Msg.WM_COMMAND:
-                        switch (NativeMethods.GetDlgCtrlID(m.LParam))
+                        switch (GetDlgCtrlID(m.LParam))
                         {
                             case (int)ControlsId.ButtonOk://OK
                                 break;

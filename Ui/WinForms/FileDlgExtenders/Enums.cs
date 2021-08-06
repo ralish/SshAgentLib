@@ -1,5 +1,5 @@
-//  Copyright (c) 2006, Gustavo Franco
-//  Copyright � Decebal Mihailescu 2007-2010
+﻿//  Copyright (c) 2006, Gustavo Franco
+//  Copyright © Decebal Mihailescu 2007-2010
 
 //  Email:  gustavo_franco@hotmail.com
 //  All rights reserved.
@@ -570,29 +570,6 @@ namespace Win32Types
 		WM_APP                    = 0x8000,
 		WM_USER                   = 0x0400,
 		WM_REFLECT                = WM_USER + 0x1c00
-	}
-	#endregion
-
-	#region SetWindowPosFlags
-    
-    [Flags]
-    internal enum SetWindowPosFlags
-	{
-		SWP_NOSIZE          = 0x0001,
-		SWP_NOMOVE          = 0x0002,
-		SWP_NOZORDER        = 0x0004,
-		SWP_NOREDRAW        = 0x0008,
-		SWP_NOACTIVATE      = 0x0010,
-		SWP_FRAMECHANGED    = 0x0020,
-		SWP_SHOWWINDOW      = 0x0040,
-		SWP_HIDEWINDOW      = 0x0080,
-		SWP_NOCOPYBITS      = 0x0100,
-		SWP_NOOWNERZORDER   = 0x0200, 
-		SWP_NOSENDCHANGING  = 0x0400,
-		SWP_DRAWFRAME       = 0x0020,
-		SWP_NOREPOSITION    = 0x0200,
-		SWP_DEFERERASE      = 0x2000,
-		SWP_ASYNCWINDOWPOS  = 0x4000
 	}
 	#endregion
 }

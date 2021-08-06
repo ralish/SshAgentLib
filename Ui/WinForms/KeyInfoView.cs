@@ -37,6 +37,9 @@ using FileDialogExtenders;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.WindowsAPICodePack.Dialogs.Controls;
 
+using static dlech.SshAgentLib.WinForms.NativeMethods;
+
+
 namespace dlech.SshAgentLib.WinForms
 {
   public partial class KeyInfoView : UserControl
@@ -239,7 +242,7 @@ namespace dlech.SshAgentLib.WinForms
         /* add help listeners to win7OpenFileDialog */
 
         // declare variables here so that the GC does not eat them.
-        WndProcDelegate newWndProc, oldWndProc = null;
+        WndProc newWndProc, oldWndProc = null;
         win7OpenFileDialog.DialogOpening += (sender, e) =>
         {
           var hwnd = win7OpenFileDialog.GetWindowHandle();
@@ -273,9 +276,9 @@ namespace dlech.SshAgentLib.WinForms
             return CallWindowProc(oldWndProc, hwnd, msg, wParam, lParam);
           };
           var newWndProcPtr = Marshal.GetFunctionPointerForDelegate(newWndProc);
-          var oldWndProcPtr = SetWindowLongPtr(hwnd, WindowLongFlags.GWL_WNDPROC, newWndProcPtr);
-          oldWndProc = (WndProcDelegate)
-              Marshal.GetDelegateForFunctionPointer(oldWndProcPtr, typeof(WndProcDelegate));
+          var oldWndProcPtr = SetWindowLongPtr(hwnd, WINDOW_LONG_INDEX.GWL_WNDPROC, newWndProcPtr);
+          oldWndProc = (WndProc)
+              Marshal.GetDelegateForFunctionPointer(oldWndProcPtr, typeof(WndProc));
         };
 
         var result = win7OpenFileDialog.ShowDialog ();
@@ -773,37 +776,6 @@ namespace dlech.SshAgentLib.WinForms
       }
     }
 
-    enum WindowLongFlags : int
-    {
-      GWL_EXSTYLE = -20,
-      GWLP_HINSTANCE = -6,
-      GWLP_HWNDPARENT = -8,
-      GWL_ID = -12,
-      GWL_STYLE = -16,
-      GWL_USERDATA = -21,
-      GWL_WNDPROC = -4,
-      DWLP_USER = 0x8,
-      DWLP_MSGRESULT = 0x0,
-      DWLP_DLGPROC = 0x4
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct POINT
-    {
-      public int X, Y;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct HELPINFO
-    {
-      public uint cbSize;
-      public int iContextType;
-      public int iCtrlId;
-      public IntPtr hItemHandle;
-      public IntPtr dwContextId;
-      public POINT MousePos;
-    };
-
     /// <summary>
     /// Changes an attribute of the specified window. The function also sets the 32-bit (long) value at the specified offset into the extra window memory.
     /// </summary>
@@ -812,24 +784,13 @@ namespace dlech.SshAgentLib.WinForms
     /// <param name="dwNewLong">The replacement value.</param>
     /// <returns>If the function succeeds, the return value is the previous value of the specified 32-bit integer.
     /// If the function fails, the return value is zero. To get extended error information, call GetLastError. </returns>
-    static IntPtr SetWindowLongPtr(IntPtr hWnd, WindowLongFlags nIndex, IntPtr dwNewLong)
+    static IntPtr SetWindowLongPtr(IntPtr hWnd, WINDOW_LONG_INDEX nIndex, IntPtr dwNewLong)
     {
       if (IntPtr.Size == 8)
-        return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+        return SetWindowLongPtr(hWnd, nIndex, dwNewLong);
       else
-        return new IntPtr(SetWindowLong32(hWnd, nIndex, dwNewLong.ToInt32()));
+        return new IntPtr(SetWindowLong(hWnd, nIndex, dwNewLong.ToInt32()));
     }
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
-    static extern int SetWindowLong32(IntPtr hWnd, WindowLongFlags nIndex, int dwNewLong);
-
-    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
-    static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, WindowLongFlags nIndex, IntPtr dwNewLong);
-
-    [DllImport("user32.dll")]
-    static extern IntPtr CallWindowProc(WndProcDelegate lpPrevWndFunc, IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-    delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
     private void dataGridView_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
     {

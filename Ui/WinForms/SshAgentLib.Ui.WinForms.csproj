@@ -118,7 +118,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="FileDlgExtenders\structs.cs" />
-    <Compile Include="FileDlgExtenders\Win32.cs" />
     <Compile Include="KeyInfoView.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -148,6 +147,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizedMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="PasswordDialog.cs">
       <SubType>Form</SubType>
     </Compile>
